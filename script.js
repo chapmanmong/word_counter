@@ -4,9 +4,12 @@ const charWSpaceCounter = document.querySelector("#charWSpaceCounter");
 const textArea = document.querySelector("#textArea");
 const calcButton = document.querySelector("#calcBtn");
 const clearButton = document.querySelector("#clearBtn");
+const input = document.querySelector("#input")
 let dict;
 let keys;
+let myChart = null;
 
+// Default text in the text
 const defaultText = `CHAPTER I.
 Down the Rabbit-Hole
 Alice was beginning to get very tired of sitting by her sister on the bank, and of having nothing to do: once or twice she had peeped into the book her sister was reading, but it had no pictures or conversations in it, “and what is the use of a book,” thought Alice “without pictures or conversations?”
@@ -70,14 +73,13 @@ calcButton.addEventListener("click", countWords);
 clearButton.addEventListener("click", () => {
     textArea.value = "";
     input.value = "";
-    frequencyDiv.innerHTML = "";
     wordCounter.textContent = "";
     charCounter.textContent = "";
     charWSpaceCounter.textContent = "";
 })
 
 input.addEventListener("change", function (e) {
-    const reader = new FileReader();
+    let reader = new FileReader();
     reader.onload = function () {
         textArea.textContent = reader.result;
     };
@@ -85,11 +87,13 @@ input.addEventListener("change", function (e) {
 })
 
 function countWords() {
-    var str = textArea.value;
-    var potentialWords = str.split(/\W+/);
-    var words = [];
-     keys = [];
+    const str = textArea.value;
+    // Extract the potential words by spliting the text into word-like tokens
+    const potentialWords = str.split(/\W+/);
+    const words = [];
+    keys = [];
 
+    // Loop through the potential words and only take the ones that are only made up of alphabetical letters, these will be considered words
     for (i = 0; i < potentialWords.length; i++) {
         if (potentialWords[i].match(/[a-zA-Z]+/)) {
             //console.log(potentialWords[i]);
@@ -98,12 +102,15 @@ function countWords() {
     }
 
     wordCounter.textContent = words.length;
+    // Anything that is not a space is considered a character
     charCounter.textContent = str.match(/\S/g).length;
+    // Even a space is considered a character
     charWSpaceCounter.textContent = str.match(/./g).length;
 
+    // Create a dictionary to hold the word as the key and count as the value
     dict = {};
-    for (var i = 0; i < words.length; i++) {
-        var word = words[i].toLowerCase();
+    for (let i = 0; i < words.length; i++) {
+        const word = words[i].toLowerCase();
         if (dict[word] == null) {
             dict[word] = 1;
             keys.push(word);
@@ -111,24 +118,29 @@ function countWords() {
             dict[word]++;
         }
     }
+    // Sort the keys array based on the word count for each key
     keys.sort(compare);
     chartIt();
 }
 
+// Compare callback function to be used with sort()
 function compare(a, b) {
-    var countA = dict[a];
-    var countB = dict[b];
-    return countB - countA;
+    return dict[b] - dict[a];
 }
 
+// Chart function that uses chart.js
 function chartIt(){
-    var yvalues = [];
+    // If a chart already exists, then destroy it
+    if (myChart != null) myChart.destroy();
+
+    //Push the y values into an array
+    let yvalues = [];
     for(i=0; i<keys.length; i++){
         yvalues.push(dict[keys[i]]);
-        //console.log(yvalues);
     }
-    var ctx = document.getElementById('chart').getContext('2d');
-    var myChart = new Chart(ctx, {
+
+    let ctx = document.getElementById('chart').getContext('2d');
+    myChart = new Chart(ctx, {
         type: 'bar',
         data: {
             labels: keys.slice(0, 15),
